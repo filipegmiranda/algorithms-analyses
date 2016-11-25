@@ -1,4 +1,5 @@
 package org.greent
+import scala.reflect.ClassTag
 
 /**
   * Sorting Algorithms Analyses
@@ -10,6 +11,10 @@ object SortingAlgs {
 
   /**
     * This version uses one single function that does the sorting and the merging
+    *
+    * Please note an imperative style is intentionally chosen here.
+    * For experimental purposes. At the same time, "whiles" are avoided, and for expressions are used with ranges
+    *
     * @param a
     * @return
     */
@@ -18,7 +23,6 @@ object SortingAlgs {
     if (arrSize == 1) {
       return a
     }
-
     val firstArrSize = arrSize / 2
     val secArrSize = arrSize / 2 + (arrSize % 2)
     val a1 = new Array[Int](firstArrSize)
@@ -72,5 +76,83 @@ object SortingAlgs {
     return aFinalR
   }
 
+  /**
+    * Trait for adding and decorating java.lang.Comparable types with syntatic sugar Greater and Less Methods = >  and  <
+    * Used then by implicit conversion
+    * @tparam T
+    */
+  trait SComparable[T] extends Comparable[T] {
+    def >(other: T): Boolean = {
+      val i = this.compareTo(other)
+      if (i > 0) true else if (i < 0) false else false
+    }
+    def <(other: T): Boolean = {
+      !this.>(other)
+    }
+  }
+
+  /**
+    * Implicit conversion from Comparable, such as java Integers and Strings to SComparable, SComparable, decorates
+    * those Java Comparables with syntatic sugar methods fro comparing
+    * @param c a java.lang.Comparable
+    * @tparam T the type of comparable
+    * @return an SComparable
+    */
+  implicit def >[T](c: Comparable[T]): SComparable[T] = {
+    new SComparable[T] {
+      def compareTo(other: T): Int = {
+        c.compareTo(other)
+      }
+    }
+  }
+
+  /**
+    * This version is a little less verbose, and uses an local function to merge
+    * the arrays
+    *
+    * @param a
+    * @tparam T
+    * @return
+    */
+  def mergeSortIn2Funs[T <: Comparable[T]](a: Array[T])(implicit m: ClassTag[T]): Array[T] = {
+    val arrSize = a.length
+    if (arrSize == 1) return a
+    val (left, right) = a.splitAt(arrSize / 2)
+    def merge(left: Array[T], right: Array[T])(implicit m: ClassTag[T]) = {
+      val arrResult = new Array[T](arrSize)
+      var k = 0
+      var l = 0
+      var r = 0
+      val lLength = left.length
+      val rLength = right.length
+
+      while ((l < lLength || r < rLength) && !(k == arrResult.length)) {
+        val lEnded = (l == lLength)
+        val rEnded = (r == rLength)
+        if ( !(lEnded || rEnded) && left(l) < right(r)) {
+          arrResult(k) = left(l)
+          k += 1
+          l += 1
+        }
+        else if (!(lEnded || rEnded) && right(r) < left(l)) {
+          arrResult(k) = right(r)
+          k += 1
+          r += 1
+        } else {
+          if (l < lLength) {
+            arrResult(k) = left(l)
+            l += 1
+            k += 1
+          } else if (r < rLength) {
+            arrResult(k) = right(r)
+            r += 1
+            k += 1
+          }
+        }
+      }
+      arrResult
+    }
+    merge(mergeSortIn2Funs(left), mergeSortIn2Funs(right))
+  }
 
 }
