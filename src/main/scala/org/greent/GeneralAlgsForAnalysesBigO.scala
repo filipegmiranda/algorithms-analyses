@@ -140,20 +140,12 @@ object GeneralAlgsForAnalysesBigO {
   /**
     * Functional way of counting nr of inversions through the use of pattern matching
     * runs in O( n log n )
+    *
     * @param list
     * @return
     */
   def doInv(list: List[Int]): (Int, List[Int]) = {
-    if (list.length <= 1) {
-      (0, list)
-    } else {
-      val (left, right) = list.splitAt(list.length / 2)
-      val (leftCount, leftList) = doInv(left)
-      val (rightCount, rightList) = doInv(right)
-      val (mergeCount, mergeList) = doMerge(leftList, rightList)
-      (leftCount + rightCount + mergeCount, mergeList)
-    }
-    def doMerge(left: List[Int], right: List[Int], count: Int = 0): (Int, List[Int]) =
+    def doMerge(left: List[Int], right: List[Int], count: Int = 0): (Int, List[Int]) = {
       (left, right) match {
         case (Nil, r) => (count, r)
         case (l, Nil) => (count, l)
@@ -166,7 +158,16 @@ object GeneralAlgsForAnalysesBigO {
             (count + left.length + rcount, rhead :: list)
           }
       }
+    }
+    if (list.length <= 1) {
+      (0, list)
+    } else {
+      val (left, right) = list.splitAt(list.length / 2)
+      val (leftCount, leftList) = doInv(left)
+      val (rightCount, rightList) = doInv(right)
+      val (mergeCount, mergeList) = doMerge(leftList, rightList)
+      (leftCount + rightCount + mergeCount, mergeList)
+    }
   }
 
 }
-
