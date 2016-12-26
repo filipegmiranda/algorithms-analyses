@@ -1,62 +1,79 @@
-
-
-def mergeSort(a: Array[Int]): Array[Int] = {
-  val arrSize = a.length
-  if (arrSize == 1) {
-    return a
-  }
-
-  val firstArrSize = arrSize / 2
-  val secArrSize = arrSize / 2 + (arrSize % 2)
-  val a1 = new Array[Int](firstArrSize)
-  val a2 = new Array[Int](secArrSize)
-
-  val upTo = (arrSize / 2)
-  for (i <- 0 until upTo) {
-    a1(i) = a(i)
-  }
-  var pos = 0
-  for (i <- upTo to arrSize - 1) {
-    a2(pos) = a(i)
-    pos += 1
-  }
-
-  val aR1 = mergeSort(a1)
-  val aR2 = mergeSort(a2)
-  val aFinalR = new Array[Int](arrSize)
-
-  var i = 0
-  var j = 0
-  var upBoundR1 = false;
-  var upBoundR2 = false;
-  for (k <- 0 until arrSize) {
-    if (aR1(i) < aR2(j) && !upBoundR1) {
-      aFinalR(k) = aR1(i)
-      if (i == aR1.length - 1) {
-        upBoundR1 = true
+def sortAndCountInv(a: Array[Int]): (Array[Int], Int) = {
+  if (a.length == 1) {
+    return (a, 0)
+  } else {
+    val (left, right) = a.splitAt(a.length / 2)
+    val (sortedL, nrL) = sortAndCountInv(left)
+    val (sortedR, nrR) = sortAndCountInv(right)
+    def mergeAndCountInv(left: Array[Int], right: Array[Int], n: Int): (Array[Int], Int) = {
+      val aR = new Array[Int](n)
+      var nr = 0
+      var i = 0
+      var j = 0
+      var rE = false
+      var lE = false
+      for (k <- 0 until n) {
+        if (lE) {
+          aR(k) = right(j)
+          j += 1
+          nr += 1
+        } else if (rE) {
+          aR(k) = left(i)
+          i += 1
+        } else if (left(i) < right(j)) {
+          aR(k) = left(i)
+          i += 1
+          lE = i == left.length
+        } else if (left(i) > right(j)) {
+          aR(k) = right(j)
+          j += 1
+          rE = j == right.length
+          nr += 1
+        } else {
+          aR(k) = left(i)
+          i += 1
+          lE = i == left.length
+        }
       }
-      else {
-        i = i + 1
-      }
-    } else if (aR2(j) < aR1(i) && !upBoundR2) {
-      aFinalR(k) = aR2(j)
-      if (j == aR2.length - 1) {
-        upBoundR2 = true
-      }
-      else {
-        j = j + 1
-      }
-    } else {
-      if (upBoundR1) {
-        aFinalR(k) = aR2(j)
-        j = if (j == aR2.length - 1) j else j + 1
-      } else {
-        aFinalR(k) = aR1(i)
-        i = if (i == aR1.length - 1) j else i + 1
-      }
+      (aR, nr)
     }
+    val fR = mergeAndCountInv(sortedL, sortedR, sortedL.length + sortedR.length)
+    (fR._1, fR._2 + nrL + nrR)
   }
-  return aFinalR
 }
 
-//val sorted = mergeSort(Array(2,5,1,9,3,0,99, -1))
+val r0 = sortAndCountInv(Array(6, 5, 4, 3, 2, 1))._2
+
+def inv(list : List[Int]) : Int = doInv(list)._1
+
+def doInv(list : List[Int]) : (Int, List[Int]) =
+  if (list.length <= 1) {
+    (0, list)
+  } else {
+    val (left, right) = list.splitAt(list.length / 2)
+    val (leftCount, leftList) = doInv(left)
+    val (rightCount, rightList) = doInv(right)
+    val (mergeCount, mergeList) = doMerge(leftList, rightList)
+    (leftCount + rightCount + mergeCount, mergeList)
+  }
+
+def doMerge(left : List[Int], right : List[Int], count : Int = 0) : (Int, List[Int]) =
+  (left, right) match {
+    case (Nil, r) => (count, r)
+    case (l, Nil) => (count, l)
+    case (lhead :: ltail, rhead :: rtail) =>
+      if (lhead <= rhead) {
+        val (lcount, list) = doMerge(ltail, right, count)
+        (count + lcount, lhead :: list)
+      } else {
+        val (rcount, list) = doMerge(left, rtail, count)
+        (count + left.length + rcount, rhead :: list)
+      }
+  }
+
+
+var r = inv(List(6,5,4,3,2,1))
+
+
+
+
